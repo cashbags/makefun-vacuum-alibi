@@ -33,7 +33,7 @@
 // Run it anywhere with MAKEFUN_OUTPUT_DIR standing in for /output:
 //   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
 
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 // The line. One crumb, one bribed sensor, one machine looking the other way.
@@ -68,6 +68,12 @@ function writeLine(): void {
   mkdirSync(outDir, { recursive: true });
   // No trailing newline: the entry text is exactly the line.
   writeFileSync(to, LINE, 'utf8');
+  // Read the bytes back and refuse to report success unless they are
+  // exactly the line — a partial write or an encoding surprise must fail
+  // loudly here, not surface later as a failed gate on the grader's side.
+  if (readFileSync(to, 'utf8') !== LINE) {
+    abort('entry.txt on disk does not match the line');
+  }
   console.log(`wrote ${to} (${length} code points)`);
 }
 
